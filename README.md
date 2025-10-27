@@ -20,17 +20,17 @@ We are building a small command‑line tool that edits monsters used by the Angb
 - That some fields only accept certain values:
   - **Blow methods** must come from `blow_methods.txt` (e.g., HIT, BITE, CLAW).
   - **Blow effects** must come from `blow_effects.txt` (e.g., HURT, FIRE, COLD).
-  - **Flags / Flags-off** must be valid names from the game.
+  - **Flags / Flags-off** are accepted as free-form pipe-separated text (e.g., EVIL | ORC).
 - A new file name to save changes to (e.g., `monster.mfe.txt`).
 
 ### 1.2 List of screens or user operations
 | ID | Screen / Operation | What it does | Main actions |
 |----|--------------------|--------------|--------------|
-| S1 | Startup / Load     | Start program and load game data | `mfe <path-to-gamedata>` → show how many monsters/methods/effects were loaded (or a clear error) |
-| S2 | Main Menu          | Central menu | 1) Search by name  2) Browse by category  3) Recent edits  4) Save-As  5) Quit |
+| S1 | Startup / Load     | Start program and load game data | `python -m mfe.cli "<path>\gamedata"` → show how many monsters/methods/effects were loaded (or a clear error) |
+| S2 | Main Menu          | Central menu | 1) Search 2) Browse by category 3) Save-As 4) Quit |
 | S3 | Search             | Find a monster by text | Enter a name part (e.g., "orc"); see a short, paged list; pick a number |
 | S4 | Browse             | Pick by category/base type | Show categories → list monsters in that category → pick one |
-| S5 | Monster Details    | Show current fields | Show: name, speed, hp, exp, up to 4 blows (method/effect/dice), flags, flags-off, description, plus two extras (level, rarity) |
+| S5 | Monster Details    | Show current fields | Show: name, speed, hit-points, experience, up to 4 blows (method/effect/dice), flags, flags-off, description lines, plus two extras (depth, rarity) |
 | S6 | Edit Field         | Change one field safely | Prompt → validate (uint / allowed set / dice / max 4 blows) → apply or re‑prompt |
 | S7 | Save-As            | Write a new file | Suggest `monster.mfe.txt` or let user type another name; confirm write |
 | S8 | Quit               | Exit safely | Warn if there are unsaved changes |
@@ -45,7 +45,6 @@ class GameDataRepo {
   - monsters: List<Monster>
   - blowMethods: Set<String>
   - blowEffects: Set<String>
-  - flags: Set<String>
   + load(path: str)
   + getByName(sub: str): List<Monster>
   + getByCategory(cat: str): List<Monster>
@@ -61,7 +60,7 @@ class Monster {
   + flags: Set<String>
   + flagsOff: Set<String>
   + description: String
-  + level: int // depth
+  + depth: int
   + rarity: int
 }
 
@@ -104,7 +103,7 @@ Serializer ..> Monster
 start
 :Parse CLI args (gamedata path);
 if (Path readable & writable?) then (yes)
-  :Load blow methods/effects/flags;
+  :Load blow methods/effects;
   :Parse monster.txt -> monsters[];
   while (Main menu) is (loop)
     :Search or Browse or Save or Quit;
@@ -164,28 +163,54 @@ stop
 ### 2.2 Test Cases
 | Test Case ID | Description | Preconditions | Steps | Expected Result | Actual Result | Tested By |
 | ------------ | ----------- | ------------- | ----- | --------------- | ------------- | --------- |
-| P01 | Parse minimal fixtures | Fixture gamedata exists | Run load | 3–5 monsters parsed; counts shown |  |  |
+| P01 | Parse minimal fixtures | Fixture gamedata exists | Run load | 2 monsters parsed (or "fixtures parse correctly"); counts shown |  |  |
 | V01 | Speed must be unsigned | Monster selected | Enter `-1` | Rejected; re‑prompt |  |  |
 | V02 | Dice format valid | Monster selected | Enter `2d6+3` | Accepted |  |  |
 | V03 | Dice format invalid | Monster selected | Enter `2x6` | Rejected; show dice hint |  |  |
 | V04 | Max 4 blows enforced | Monster selected | Try to add 5th blow | Rejected with clear message |  |  |
 | B01 | Method must be allowed | Methods loaded | Pick method not in list | Rejected; show allowed methods |  |  |
 | B02 | Effect must be allowed | Effects loaded | Pick effect not in list | Rejected; show allowed effects |  |  |
-| F01 | Flags subset enforced | Flags loaded | Add unknown flag | Rejected |  |  |
+| F01 | Flags policy (free-form) | — | Add arbitrary flag text | Accepted; stored as typed |  |  |
 | S01 | Save & reload | Edits applied | Save‑as; reload file | Values persist correctly |  |  |
 | ERR01 | Missing methods file | Remove `blow_methods.txt` | Load | Clear error naming the missing file |  |  |
 | CLI01 | Search paging works | Many matches | Search; use next/prev | Paged list behaves correctly |  |  |
 
 ### 2.3 Test Environment Description
 - Python **3.10+** (Windows/macOS/Linux)
-- Small **fixture** gamedata folder with: `monster.fixture.txt`, `blow_methods.fixture.txt`, `blow_effects.fixture.txt`, `flags.fixture.txt`
-- `pytest` for running tests
+- **pytest** (installed via `requirements.txt`)
+- Tests use an **auto-generated mini gamedata** (created in `tests/conftest.py`) — you do **not** need real `*.fixture.txt` files and you do **not** need Angband installed to run the tests.
+- Run tests from the **project root** (the folder that contains the `mfe/` package).
+
 
 ### 2.4 Instructions for running tests
+**(Optional) create and activate a virtual environment**
+**Windows (PowerShell)**
+```powershell
+python -m venv .venv
+. .\.venv\Scripts\Activate.ps1
+```
+
+**macOS/Linux**
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt                  # includes pytest
-pytest -q
+python -m venv .venv
+source .venv/bin/activate
+```
+
+**Install test dependency (pytest)**
+```powershell
+pip install -r requirements.txt
+```
+
+**Run tests (from the project root)**
+
+**Windows**
+```powershell
+py -m pytest -q
+```
+
+**macOS/Linux**
+```bash
+python -m pytest -q
 ```
 
 ---
