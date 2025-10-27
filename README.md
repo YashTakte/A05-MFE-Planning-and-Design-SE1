@@ -36,7 +36,7 @@ We are building a small command‑line tool that edits monsters used by the Angb
 | S8 | Quit               | Exit safely | Warn if there are unsaved changes |
 
 ### 1.3 Class Diagram
-![Class Diagram](https://raw.githubusercontent.com/YashTakte/A05-MFE-Planning-and-Design-SE1/main/class_diagram.png)
+![Class Diagram](https://raw.githubusercontent.com/YashTakte/A05-MFE-Planning-and-Design-SE1/main/class_diag.png)
 
 **PlantUML Source**
 ```plantuml
