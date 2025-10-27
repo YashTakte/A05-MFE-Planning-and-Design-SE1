@@ -95,7 +95,7 @@ Serializer ..> Monster
 ```
 
 ### 1.4 Activity Flow Diagram
-![Activity Flow](https://raw.githubusercontent.com/YashTakte/A05-MFE-Planning-and-Design-SE1/main/activity_flow.png)
+![Activity Flow](https://raw.githubusercontent.com/YashTakte/A05-MFE-Planning-and-Design-SE1/main/activity_diagram.png)
 
 **PlantUML Source**
 ```plantuml
